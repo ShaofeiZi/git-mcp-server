@@ -1,5 +1,7 @@
 # GIT MCP 服务器
 
+> 中文适配和自己使用习惯
+
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-1.8.0-green.svg)](https://modelcontextprotocol.io/)
 [![Version](https://img.shields.io/badge/Version-1.2.4-blue.svg)]()

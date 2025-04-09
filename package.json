@@ -1,5 +1,5 @@
 {
-  "name": "@cyanheads/git-mcp-server",
+  "name": "@zishaofei/git-mcp-server",
   "version": "1.2.4",
   "description": "A Model Context Protocol server for Git integration",
   "type": "module",
@@ -7,7 +7,7 @@
   "author": "Casey Hand @cyanheads",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cyanheads/git-mcp-server"
+    "url": "https://github.com/ShaofeiZi/git-mcp-server"
   },
   "bin": {
     "git-mcp-server": "./build/index.js"
