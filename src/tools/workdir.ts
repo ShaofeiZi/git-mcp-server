@@ -25,17 +25,17 @@ export function setupWorkdirTools(server: McpServer): void {
   // 设置全局工作目录
   server.tool(
     "git_set_working_dir",
-    "Set a global working directory path for all Git operations. Future tool calls can use '.' as the filepath and it will resolve to this global path. IMPORTANT: Always use a full, absolute path to ensure proper functionality.",
+    "设置所有 Git 操作的全局工作目录路径。未来的工具调用可以使用 '.' 作为文件路径，它将解析到这个全局路径。重要：始终使用完整的绝对路径以确保正确功能。",
     {
       path: z
         .string()
-        .min(1, "Working directory path is required")
-        .describe("Full, absolute path to use as the global working directory"),
+        .min(1, "需要提供工作目录路径")
+        .describe("用作全局工作目录的完整绝对路径"),
       validateGitRepo: z
         .boolean()
         .optional()
         .default(true)
-        .describe("Whether to validate that the path is a Git repository"),
+        .describe("是否验证该路径是一个 Git 仓库"),
     },
     async ({ path, validateGitRepo }) => {
       try {
@@ -51,7 +51,7 @@ export function setupWorkdirTools(server: McpServer): void {
               content: [
                 {
                   type: "text",
-                  text: `Error: Not a Git repository: ${normalizedPath}`,
+                  text: `错误：不是一个 Git 仓库：${normalizedPath}`,
                 },
               ],
               isError: true,
@@ -67,7 +67,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully set global working directory to: ${normalizedPath}`,
+              text: `成功设置全局工作目录为：${normalizedPath}`,
             },
           ],
         };
@@ -76,7 +76,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -91,7 +91,7 @@ export function setupWorkdirTools(server: McpServer): void {
   // 清除全局工作目录
   server.tool(
     "git_clear_working_dir",
-    "Clear the global working directory setting. Tools will use their explicitly provided path parameters.",
+    "清除全局工作目录设置。工具将使用其显式提供的路径参数。",
     {},
     async () => {
       try {
@@ -103,8 +103,8 @@ export function setupWorkdirTools(server: McpServer): void {
             {
               type: "text",
               text: currentPath
-                ? `Successfully cleared global working directory (was: ${currentPath})`
-                : "No global working directory was set",
+                ? `成功清除全局工作目录（原路径：${currentPath}）`
+                : "未设置全局工作目录",
             },
           ],
         };
@@ -113,7 +113,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -128,25 +128,22 @@ export function setupWorkdirTools(server: McpServer): void {
   // 暂存文件
   server.tool(
     "git_add",
-    "Stage files for commit. Adds file contents to the index (staging area) in preparation for the next commit. Can stage specific files or all changes in the working directory. IMPORTANT: Always use a full, absolute path to the repository to ensure proper functionality.",
+    "暂存文件以准备提交。将文件内容添加到索引（暂存区）以准备下一次提交。可以暂存特定文件或工作目录中的所有更改。重要：始终使用完整的绝对路径以确保正确功能。",
     {
       path: z
         .string()
-        .min(1, "Repository path is required")
-        .describe("Full, absolute path to the Git repository"),
+        .min(1, "需要提供仓库路径")
+        .describe("Git 仓库的完整绝对路径"),
       files: z
         .union([
+          z.string().min(1, "需要提供文件路径").describe("要暂存的文件路径"),
           z
-            .string()
-            .min(1, "File path is required")
-            .describe("Path to a file to stage"),
-          z
-            .array(z.string().min(1, "File path is required"))
-            .describe("Array of file paths to stage"),
+            .array(z.string().min(1, "需要提供文件路径"))
+            .describe("要暂存的文件路径数组"),
         ])
         .optional()
         .default(".")
-        .describe("Files to stage for commit, defaults to all changes"),
+        .describe("要暂存的文件，默认为所有更改"),
     },
     async ({ path, files }) => {
       try {
@@ -161,7 +158,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -175,7 +172,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -186,11 +183,11 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully staged ${
+              text: `成功暂存${
                 typeof files === "string" && files === "."
-                  ? "all files"
+                  ? "所有文件"
                   : Array.isArray(files)
-                  ? `${files.length} files`
+                  ? `${files.length} 个文件`
                   : `'${files}'`
               }`,
             },
@@ -201,7 +198,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -216,25 +213,25 @@ export function setupWorkdirTools(server: McpServer): void {
   // 取消暂存文件
   server.tool(
     "git_reset",
-    "Unstage files from the index. Removes file contents from the staging area while preserving the working directory changes. The opposite of git_add. IMPORTANT: Always use a full, absolute path to the repository to ensure proper functionality.",
+    "从索引中取消暂存文件。从暂存区移除文件内容，同时保留工作目录的更改。是 git_add 的反向操作。重要：始终使用完整的绝对路径以确保正确功能。",
     {
       path: z
         .string()
-        .min(1, "Repository path is required")
-        .describe("Full, absolute path to the Git repository"),
+        .min(1, "需要提供仓库路径")
+        .describe("Git 仓库的完整绝对路径"),
       files: z
         .union([
           z
             .string()
-            .min(1, "File path is required")
-            .describe("Path to a file to unstage"),
+            .min(1, "需要提供文件路径")
+            .describe("要取消暂存的文件路径"),
           z
-            .array(z.string().min(1, "File path is required"))
-            .describe("Array of file paths to unstage"),
+            .array(z.string().min(1, "需要提供文件路径"))
+            .describe("要取消暂存的文件路径数组"),
         ])
         .optional()
         .default(".")
-        .describe("Files to unstage, defaults to all staged changes"),
+        .describe("要取消暂存的文件，默认为所有已暂存的更改"),
     },
     async ({ path, files }) => {
       try {
@@ -249,7 +246,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -263,7 +260,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -274,11 +271,11 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully unstaged ${
+              text: `成功取消暂存${
                 typeof files === "string" && files === "."
-                  ? "all files"
+                  ? "所有文件"
                   : Array.isArray(files)
-                  ? `${files.length} files`
+                  ? `${files.length} 个文件`
                   : `'${files}'`
               }`,
             },
@@ -289,7 +286,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -304,37 +301,34 @@ export function setupWorkdirTools(server: McpServer): void {
   // 提交更改
   server.tool(
     "git_commit",
-    "Commit staged changes to the repository. Creates a new commit containing the current contents of the index with the provided commit message. Supports optional author information, amending previous commits, and creating empty commits. IMPORTANT: Always use a full, absolute path to the repository to ensure proper functionality.",
+    "将暂存的更改提交到仓库。创建一个包含当前索引内容的新提交，使用提供的提交消息。支持可选的作者信息、修改前一个提交和创建空提交。重要：始终使用完整的绝对路径以确保正确功能。",
     {
       path: z
         .string()
-        .min(1, "Repository path is required")
-        .describe("Full, absolute path to the Git repository"),
-      message: z
-        .string()
-        .min(1, "Commit message is required")
-        .describe("Message for the commit"),
+        .min(1, "需要提供仓库路径")
+        .describe("Git 仓库的完整绝对路径"),
+      message: z.string().min(1, "需要提供提交消息").describe("提交的消息"),
       author: z
         .object({
-          name: z.string().optional().describe("Author name for the commit"),
+          name: z.string().optional().describe("提交的作者名称"),
           email: z
             .string()
-            .email("Invalid email")
+            .email("无效的邮箱地址")
             .optional()
-            .describe("Author email for the commit"),
+            .describe("提交的作者邮箱"),
         })
         .optional()
-        .describe("Author information for the commit"),
+        .describe("提交的作者信息"),
       allowEmpty: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Allow creating empty commits"),
+        .describe("是否允许创建空提交"),
       amend: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Amend the previous commit instead of creating a new one"),
+        .describe("是否修改前一个提交而不是创建新提交"),
     },
     async ({ path, message, author, allowEmpty, amend }) => {
       try {
@@ -349,24 +343,16 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
           };
         }
 
-        // The GitService constructor and simple-git should automatically use the
-        // GIT_AUTHOR_NAME/EMAIL environment variables set in server.ts.
-        // No need to fetch global config here again.
-        // Pass the provided author object directly, or undefined if not provided.
-        // GitService 构造函数和 simple-git 应该自动使用在 server.ts 中设置的
-        // GIT_AUTHOR_NAME/EMAIL 环境变量。
-        // 这里不需要再次获取全局配置。
-        // 直接传递提供的作者对象，如果未提供则为 undefined。
         const result = await gitService.commit({
           message,
-          author: author, // Pass the input author directly
+          author,
           allowEmpty,
           amend,
         });
@@ -376,7 +362,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -387,9 +373,9 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully committed changes${
-                amend ? " (amended)" : ""
-              } with message: "${message}"\nCommit hash: ${result.resultData}`,
+              text: `成功${
+                amend ? "修改" : "创建"
+              }提交，消息为："${message}"\n提交哈希：${result.resultData}`,
             },
           ],
         };
@@ -398,7 +384,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -413,21 +399,21 @@ export function setupWorkdirTools(server: McpServer): void {
   // 查看工作目录差异
   server.tool(
     "git_diff_unstaged",
-    "Show unstaged changes in the working directory. Displays the differences between the working directory and the index (staging area). Can be limited to a specific file or show all changed files. IMPORTANT: Always use a full, absolute path to the repository to ensure proper functionality.",
+    "显示工作目录中未暂存的更改。显示工作目录和索引（暂存区）之间的差异。可以限制为特定文件或显示所有更改的文件。重要：始终使用完整的绝对路径以确保正确功能。",
     {
       path: z
         .string()
-        .min(1, "Repository path is required")
-        .describe("Full, absolute path to the Git repository"),
+        .min(1, "需要提供仓库路径")
+        .describe("Git 仓库的完整绝对路径"),
       file: z
         .string()
         .optional()
-        .describe("Specific file to get diff for, or all files if omitted"),
+        .describe("要获取差异的特定文件，如果省略则显示所有文件"),
       showUntracked: z
         .boolean()
         .optional()
         .default(true)
-        .describe("Whether to include information about untracked files"),
+        .describe("是否包含未跟踪文件的信息"),
     },
     async ({ path, file, showUntracked }) => {
       try {
@@ -442,7 +428,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -456,7 +442,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -468,8 +454,8 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `No unstaged changes or untracked files${
-                  file ? ` in '${file}'` : ""
+                text: `没有未暂存的更改或未跟踪的文件${
+                  file ? ` 在 '${file}' 中` : ""
                 }`,
               },
             ],
@@ -489,7 +475,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -504,16 +490,16 @@ export function setupWorkdirTools(server: McpServer): void {
   // 查看暂存差异
   server.tool(
     "git_diff_staged",
-    "Show staged changes ready for commit. Displays the differences between the index (staging area) and the latest commit. Can be limited to a specific file or show all staged files. IMPORTANT: Always use a full, absolute path to the repository to ensure proper functionality.",
+    "显示准备提交的已暂存更改。显示索引（暂存区）和最新提交之间的差异。可以限制为特定文件或显示所有已暂存的文件。重要：始终使用完整的绝对路径以确保正确功能。",
     {
       path: z
         .string()
-        .min(1, "Repository path is required")
-        .describe("Full, absolute path to the Git repository"),
+        .min(1, "需要提供仓库路径")
+        .describe("Git 仓库的完整绝对路径"),
       file: z
         .string()
         .optional()
-        .describe("Specific file to get diff for, or all files if omitted"),
+        .describe("要获取差异的特定文件，如果省略则显示所有文件"),
     },
     async ({ path, file }) => {
       try {
@@ -528,7 +514,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -542,7 +528,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -554,7 +540,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `No staged changes${file ? ` in '${file}'` : ""}`,
+                text: `没有已暂存的更改${file ? ` 在 '${file}' 中` : ""}`,
               },
             ],
           };
@@ -573,7 +559,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -588,23 +574,23 @@ export function setupWorkdirTools(server: McpServer): void {
   // 重置到特定提交
   server.tool(
     "git_reset_commit",
-    "Reset the current branch to a specific commit. This changes where the branch HEAD points to, with different modes affecting the working directory and index differently (hard: discard all changes, soft: keep staged changes, mixed: unstage but keep changes). IMPORTANT: Always use a full, absolute path to the repository to ensure proper functionality.",
+    "将当前分支重置到特定提交。这会改变分支 HEAD 指向的位置，不同模式会对工作目录和索引产生不同影响（hard：丢弃所有更改，soft：保留已暂存的更改，mixed：取消暂存但保留更改）。重要：始终使用完整的绝对路径以确保正确功能。",
     {
       path: z
         .string()
-        .min(1, "Repository path is required")
-        .describe("Full, absolute path to the Git repository"),
+        .min(1, "需要提供仓库路径")
+        .describe("Git 仓库的完整绝对路径"),
       ref: z
         .string()
         .default("HEAD")
         .describe(
-          "Reference to reset to, defaults to HEAD (e.g., commit hash, branch name, or HEAD~1)"
+          "要重置到的引用，默认为 HEAD（例如：提交哈希、分支名称或 HEAD~1）"
         ),
       mode: z
         .enum(["hard", "soft", "mixed"])
         .default("mixed")
         .describe(
-          "Reset mode: hard (discard changes), soft (keep staged), or mixed (unstage but keep changes)"
+          "重置模式：hard（丢弃更改），soft（保留已暂存），或 mixed（取消暂存但保留更改）"
         ),
     },
     async ({ path, ref, mode }) => {
@@ -620,7 +606,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -634,7 +620,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -645,7 +631,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully reset to ${ref} using mode: ${mode}`,
+              text: `成功使用 ${mode} 模式重置到 ${ref}`,
             },
           ],
         };
@@ -654,7 +640,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -669,24 +655,22 @@ export function setupWorkdirTools(server: McpServer): void {
   // 清理工作目录
   server.tool(
     "git_clean",
-    "Remove untracked files from the working directory. Deletes files that aren't tracked by Git, optionally including directories. Use with caution as this operation cannot be undone. IMPORTANT: Always use a full, absolute path to the repository to ensure proper functionality.",
+    "从工作目录中移除未跟踪的文件。删除未被 Git 跟踪的文件，可选择包括目录。请谨慎使用，此操作无法撤消。重要：始终使用完整的绝对路径以确保正确功能。",
     {
       path: z
         .string()
-        .min(1, "Repository path is required")
-        .describe("Full, absolute path to the Git repository"),
+        .min(1, "需要提供仓库路径")
+        .describe("Git 仓库的完整绝对路径"),
       directories: z
         .boolean()
         .optional()
         .default(false)
-        .describe(
-          "Whether to remove untracked directories in addition to files"
-        ),
+        .describe("是否同时移除未跟踪的目录"),
       force: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Force cleaning of files, including ignored files"),
+        .describe("是否强制清理文件，包括被忽略的文件"),
     },
     async ({ path, directories, force }) => {
       try {
@@ -701,7 +685,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -715,7 +699,7 @@ export function setupWorkdirTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -726,9 +710,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully cleaned working directory${
-                directories ? " (including directories)" : ""
-              }`,
+              text: `成功清理工作目录${directories ? "（包括目录）" : ""}`,
             },
           ],
         };
@@ -737,7 +719,7 @@ export function setupWorkdirTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },

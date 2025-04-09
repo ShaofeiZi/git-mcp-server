@@ -19,9 +19,9 @@
     "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
     "prepare": "npm run build",
     "watch": "tsc --watch",
-    "inspector": "npx @modelcontextprotocol/inspector build/index.js",
-    "clean": "ts-node scripts/clean.ts",
-    "tree": "ts-node scripts/tree.ts",
+    "inspector": "GIT_MCP_BASE_DIR=XXX npx @modelcontextprotocol/inspector build/index.js",
+    "clean": "node --loader ts-node/esm scripts/clean.ts",
+    "tree": "node --loader ts-node/esm scripts/tree.ts",
     "rebuild": "npm run clean && npm run build"
   },
   "publishConfig": {

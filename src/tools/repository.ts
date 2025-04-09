@@ -23,24 +23,22 @@ export function setupRepositoryTools(server: McpServer): void {
   // 初始化一个新的 Git 仓库
   server.tool(
     "git_init",
-    "Initialize a new Git repository. Creates the necessary directory structure and Git metadata for a new Git repository at the specified path. The repository can be created as a standard repository with a working directory or as a bare repository (typically used for centralized repositories). Creates a 'main' branch by default.",
+    "初始化一个新的 Git 仓库。在指定路径创建必要的目录结构和 Git 元数据。可以创建一个带有工作目录的标准仓库或一个裸仓库（通常用于集中式仓库）。默认创建一个 'main' 分支。",
     {
       path: z
         .string()
-        .min(1, "Repository path is required")
-        .describe("Path to initialize the Git repository in"),
+        .min(1, "需要提供仓库路径")
+        .describe("初始化 Git 仓库的路径"),
       bare: z
         .boolean()
         .optional()
         .default(false)
-        .describe(
-          "Whether to create a bare repository without a working directory"
-        ),
+        .describe("是否创建一个没有工作目录的裸仓库"),
       initialBranch: z
         .string()
         .optional()
         .default("main")
-        .describe("Name of the initial branch (defaults to 'main')"),
+        .describe("初始分支的名称（默认为 'main'）"),
     },
     async ({ path, bare, initialBranch }) => {
       try {
@@ -54,7 +52,7 @@ export function setupRepositoryTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误: ${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -65,9 +63,9 @@ export function setupRepositoryTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully initialized ${
-                bare ? "bare " : ""
-              }Git repository with initial branch '${initialBranch}' at: ${normalizedPath}`,
+              text: `成功初始化 ${
+                bare ? "裸 " : ""
+              }Git 仓库，初始分支为 '${initialBranch}'，路径为: ${normalizedPath}`,
             },
           ],
         };
@@ -76,7 +74,7 @@ export function setupRepositoryTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误: ${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -91,25 +89,19 @@ export function setupRepositoryTools(server: McpServer): void {
   // 克隆一个 Git 仓库
   server.tool(
     "git_clone",
-    "Clone a Git repository. Downloads a repository from a remote location and creates a local copy with all its history. Supports specifying branches, creating shallow clones, and more.",
+    "克隆一个 Git 仓库。从远程位置下载一个仓库并创建一个包含所有历史记录的本地副本。支持指定分支、创建浅克隆等。",
     {
-      url: z
-        .string()
-        .url("Invalid repository URL")
-        .describe("URL of the Git repository to clone"),
+      url: z.string().url("无效的仓库 URL").describe("要克隆的 Git 仓库的 URL"),
       path: z
         .string()
-        .min(1, "Destination path is required")
-        .describe("Local path where the repository will be cloned"),
-      branch: z
-        .string()
-        .optional()
-        .describe("Specific branch to checkout after cloning"),
+        .min(1, "需要提供目标路径")
+        .describe("克隆仓库的本地路径"),
+      branch: z.string().optional().describe("克隆后要检出的特定分支"),
       depth: z
         .number()
         .positive()
         .optional()
-        .describe("Create a shallow clone with specified number of commits"),
+        .describe("创建具有指定提交数量的浅克隆"),
     },
     async ({ url, path, branch, depth }) => {
       try {
@@ -127,7 +119,7 @@ export function setupRepositoryTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误: ${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -138,7 +130,7 @@ export function setupRepositoryTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully cloned repository from ${url} to ${normalizedPath}`,
+              text: `成功从 ${url} 克隆仓库到 ${normalizedPath}`,
             },
           ],
         };
@@ -147,7 +139,7 @@ export function setupRepositoryTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误: ${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -162,12 +154,9 @@ export function setupRepositoryTools(server: McpServer): void {
   // 获取仓库状态
   server.tool(
     "git_status",
-    "Get repository status. Shows the working tree status including tracked/untracked files, modifications, staged changes, and current branch information.",
+    "获取仓库状态。显示工作树状态，包括已跟踪/未跟踪的文件、修改、暂存的更改和当前分支信息。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
     },
     async ({ path }) => {
       try {
@@ -182,7 +171,7 @@ export function setupRepositoryTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误: 这不是一个 Git 仓库: ${normalizedPath}`,
               },
             ],
             isError: true,
@@ -196,7 +185,7 @@ export function setupRepositoryTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误: ${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -206,8 +195,7 @@ export function setupRepositoryTools(server: McpServer): void {
         const status = result.resultData;
         const isClean = status.isClean();
 
-        let statusOutput = `Status for repository at: ${normalizedPath}\n`;
-        statusOutput += `Current branch: ${status.current}\n`;
+        let statusOutput = `仓库路径: ${normalizedPath} 的状态\n当前分支: ${status.current}\n`;
 
         if (status.tracking) {
           statusOutput += `Tracking: ${status.tracking}\n`;
@@ -219,35 +207,33 @@ export function setupRepositoryTools(server: McpServer): void {
           // Show untracked files
           // 显示未跟踪的文件
           if (status.not_added && status.not_added.length > 0) {
-            statusOutput += `\nUntracked files:\n  ${status.not_added.join(
+            statusOutput += `\n未跟踪的文件:\n  ${status.not_added.join(
               "\n  "
             )}\n`;
           }
 
           if (status.created.length > 0) {
-            statusOutput += `\nNew files:\n  ${status.created.join("\n  ")}\n`;
+            statusOutput += `\n新文件:\n  ${status.created.join("\n  ")}\n`;
           }
 
           if (status.modified.length > 0) {
-            statusOutput += `\nModified files:\n  ${status.modified.join(
+            statusOutput += `\n修改的文件:\n  ${status.modified.join(
               "\n  "
             )}\n`;
           }
 
           if (status.deleted.length > 0) {
-            statusOutput += `\nDeleted files:\n  ${status.deleted.join(
-              "\n  "
-            )}\n`;
+            statusOutput += `\n删除的文件:\n  ${status.deleted.join("\n  ")}\n`;
           }
 
           if (status.renamed.length > 0) {
-            statusOutput += `\nRenamed files:\n  ${status.renamed.join(
+            statusOutput += `\n重命名的文件:\n  ${status.renamed.join(
               "\n  "
             )}\n`;
           }
 
           if (status.conflicted.length > 0) {
-            statusOutput += `\nConflicted files:\n  ${status.conflicted.join(
+            statusOutput += `\n冲突的文件:\n  ${status.conflicted.join(
               "\n  "
             )}\n`;
           }
@@ -266,7 +252,7 @@ export function setupRepositoryTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误: ${
                 error instanceof Error ? error.message : String(error)
               }`,
             },

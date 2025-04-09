@@ -129,7 +129,7 @@ export const PathValidation = {
 
     return (
       normalizedTarget.startsWith(normalizedBase) &&
-      normalizedTarget.length > normalizedBase.length
+      normalizedTarget.length >= normalizedBase.length
     );
   },
 

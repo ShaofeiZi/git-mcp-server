@@ -132,6 +132,7 @@ export function registerAllResources(server: McpServer): void {
   // Note: Metadata for resources is defined in the resourceMetadata object,
   // which can be used when registering resources in their respective handlers.
   // The MCP protocol exposes this metadata through the registered resources.
+  //
   // 注意：资源的元数据在 resourceMetadata 对象中定义，
   // 可以在各自的处理器中注册资源时使用。
   // MCP 协议通过注册的资源公开此元数据。

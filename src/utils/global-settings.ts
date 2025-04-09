@@ -10,6 +10,7 @@
  */
 
 import path from "path";
+import fs from "fs";
 
 /**
  * Global settings singleton for storing app-wide configuration
@@ -29,13 +30,12 @@ export class GlobalSettings {
     // 验证并设置来自环境变量的允许基本目录
     const baseDir = process.env.GIT_MCP_BASE_DIR;
     if (!baseDir) {
-      throw new Error(
-        "FATAL: GIT_MCP_BASE_DIR environment variable is not set. Server cannot operate securely without a defined base directory."
-      );
+      throw new Error('FATAL: GIT_MCP_BASE_DIR environment variable is not set. Server cannot operate securely without a defined base directory.');
     }
-    // Normalize the base directory path
-    // 规范化基本目录路径
+    // Normalize the base directory path and resolve any symlinks
+    // 规范化基本目录路径并解析任何符号链接
     this._allowedBaseDir = path.resolve(baseDir);
+
     console.log(
       `[GlobalSettings] Allowed base directory set to: ${this._allowedBaseDir}`
     );
@@ -76,7 +76,11 @@ export class GlobalSettings {
    *             - 用作全局工作目录的路径
    */
   public setGlobalWorkingDir(path: string | null): void {
-    this._globalWorkingDir = path;
+    if (path) {
+      this._globalWorkingDir = fs.realpathSync(path);
+    } else {
+      this._globalWorkingDir = null;
+    }
   }
 }
 

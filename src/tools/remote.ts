@@ -23,20 +23,14 @@ export function setupRemoteTools(server: McpServer): void {
   // 添加远程
   server.tool(
     "git_remote_add",
-    "Add a new remote repository reference. Creates a connection to a remote repository with a name and URL, allowing fetching and pushing changes to and from that repository.",
+    "添加新的远程仓库引用。创建与远程仓库的连接，设置名称和 URL，允许从该仓库获取和推送更改。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
       name: z
         .string()
-        .min(1, "Remote name is required")
-        .describe("Name for the remote repository (e.g., 'origin')"),
-      url: z
-        .string()
-        .url("Invalid URL format")
-        .describe("URL of the remote repository"),
+        .min(1, "需要提供远程名称")
+        .describe("远程仓库的名称（例如：'origin'）"),
+      url: z.string().url("URL 格式无效").describe("远程仓库的 URL"),
     },
     async ({ path, name, url }) => {
       try {
@@ -51,7 +45,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -68,7 +62,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -79,7 +73,7 @@ export function setupRemoteTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully added remote '${name}' with URL '${url}'`,
+              text: `成功添加远程仓库 '${name}'，URL 为 '${url}'`,
             },
           ],
         };
@@ -88,7 +82,7 @@ export function setupRemoteTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -103,12 +97,9 @@ export function setupRemoteTools(server: McpServer): void {
   // 列出远程
   server.tool(
     "git_remote_list",
-    "List all configured remote repositories. Displays the names and URLs of all remotes associated with the repository, showing both fetch and push URLs.",
+    "列出所有配置的远程仓库。显示与仓库关联的所有远程仓库的名称和 URL，包括获取和推送 URL。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
     },
     async ({ path }) => {
       try {
@@ -123,7 +114,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -137,7 +128,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -149,7 +140,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `No remotes found in repository at: ${normalizedPath}`,
+                text: `在仓库路径：${normalizedPath} 中未找到远程仓库`,
               },
             ],
           };
@@ -157,11 +148,11 @@ export function setupRemoteTools(server: McpServer): void {
 
         // Format output
         // 格式化输出
-        let output = `Remotes in repository at: ${normalizedPath}\n\n`;
+        let output = `仓库路径：${normalizedPath} 中的远程仓库\n\n`;
         result.resultData.forEach((remote) => {
           output += `${remote.name}\n`;
-          output += `  fetch: ${remote.refs.fetch}\n`;
-          output += `  push: ${remote.refs.push}\n\n`;
+          output += `  获取：${remote.refs.fetch}\n`;
+          output += `  推送：${remote.refs.push}\n\n`;
         });
 
         return {
@@ -177,7 +168,7 @@ export function setupRemoteTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -192,21 +183,18 @@ export function setupRemoteTools(server: McpServer): void {
   // 从远程获取
   server.tool(
     "git_fetch",
-    "Fetch changes from a remote repository. Downloads objects and refs from a remote repository without merging them into local branches.",
+    "从远程仓库获取更改。下载远程仓库的对象和引用，但不合并到本地分支。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
       remote: z
         .string()
         .optional()
         .default("origin")
-        .describe("Name of the remote to fetch from (defaults to 'origin')"),
+        .describe("要获取的远程仓库名称（默认为 'origin'）"),
       branch: z
         .string()
         .optional()
-        .describe("Specific branch to fetch (fetches all branches if omitted)"),
+        .describe("要获取的特定分支（如果省略则获取所有分支）"),
     },
     async ({ path, remote, branch }) => {
       try {
@@ -221,7 +209,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -235,7 +223,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -246,9 +234,9 @@ export function setupRemoteTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully fetched from remote '${remote}'${
-                branch ? ` branch '${branch}'` : ""
-              }`,
+              text: `成功从远程仓库 '${remote}'${
+                branch ? ` 分支 '${branch}'` : ""
+              } 获取更改`,
             },
           ],
         };
@@ -257,7 +245,7 @@ export function setupRemoteTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -272,25 +260,22 @@ export function setupRemoteTools(server: McpServer): void {
   // 从远程拉取
   server.tool(
     "git_pull",
-    "Pull changes from a remote repository. Fetches from a remote repository and integrates changes into the current branch, either by merging or rebasing.",
+    "从远程仓库拉取更改。从远程仓库获取并将更改集成到当前分支，可以通过合并或变基方式进行。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
       remote: z
         .string()
         .optional()
-        .describe("Name of the remote to pull from (defaults to origin)"),
+        .describe("要拉取的远程仓库名称（默认为 origin）"),
       branch: z
         .string()
         .optional()
-        .describe("Branch to pull from (defaults to current tracking branch)"),
+        .describe("要拉取的分支（默认为当前跟踪分支）"),
       rebase: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Whether to use rebase instead of merge when pulling"),
+        .describe("拉取时是否使用变基而不是合并"),
     },
     async ({ path, remote, branch, rebase }) => {
       try {
@@ -305,7 +290,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -323,7 +308,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -334,11 +319,9 @@ export function setupRemoteTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully pulled changes${
-                remote ? ` from remote '${remote}'` : ""
-              }${branch ? ` branch '${branch}'` : ""}${
-                rebase ? " with rebase" : ""
-              }`,
+              text: `成功拉取更改${remote ? ` 从远程仓库 '${remote}'` : ""}${
+                branch ? ` 分支 '${branch}'` : ""
+              }${rebase ? "（使用变基）" : ""}`,
             },
           ],
         };
@@ -347,7 +330,7 @@ export function setupRemoteTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -362,31 +345,25 @@ export function setupRemoteTools(server: McpServer): void {
   // 推送到远程
   server.tool(
     "git_push",
-    "Push local changes to a remote repository. Uploads local branch commits to the remote repository, updating remote references.",
+    "推送本地更改到远程仓库。上传本地分支提交到远程仓库，更新远程引用。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
       remote: z
         .string()
         .optional()
         .default("origin")
-        .describe("Name of the remote to push to (defaults to 'origin')"),
-      branch: z
-        .string()
-        .optional()
-        .describe("Branch to push (defaults to current branch)"),
+        .describe("要推送到的远程仓库名称（默认为 'origin'）"),
+      branch: z.string().optional().describe("要推送的分支（默认为当前分支）"),
       force: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Force push changes, overwriting remote history"),
+        .describe("是否强制推送更改，覆盖远程历史"),
       setUpstream: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Set upstream tracking for the branch being pushed"),
+        .describe("是否为推送的分支设置上游跟踪"),
     },
     async ({ path, remote, branch, force, setUpstream }) => {
       try {
@@ -401,7 +378,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -420,7 +397,7 @@ export function setupRemoteTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -431,10 +408,10 @@ export function setupRemoteTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully pushed changes to remote '${remote}'${
-                branch ? ` branch '${branch}'` : ""
-              }${force ? " (force push)" : ""}${
-                setUpstream ? " (set upstream)" : ""
+              text: `成功推送更改到远程仓库 '${remote}'${
+                branch ? ` 分支 '${branch}'` : ""
+              }${force ? "（强制推送）" : ""}${
+                setUpstream ? "（设置上游）" : ""
               }`,
             },
           ],
@@ -444,7 +421,7 @@ export function setupRemoteTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },

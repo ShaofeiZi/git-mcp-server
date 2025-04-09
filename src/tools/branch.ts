@@ -24,17 +24,10 @@ export function setupBranchTools(server: McpServer): void {
   // 列出分支
   server.tool(
     "git_branch_list",
-    "List branches in a repository. Displays both local and optionally remote branches, clearly marking the current branch.",
+    "列出仓库中的分支。显示本地分支和可选的远程分支，清楚地标记当前分支。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
-      all: z
-        .boolean()
-        .optional()
-        .default(false)
-        .describe("Whether to include remote branches in the list"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
+      all: z.boolean().optional().default(false).describe("是否包含远程分支"),
     },
     async ({ path, all }: { path: string; all: boolean }) => {
       try {
@@ -42,14 +35,14 @@ export function setupBranchTools(server: McpServer): void {
         const gitService = new GitService(normalizedPath);
 
         // Check if this is a git repository
-        // 检查这是否是一个 Git 仓库
+        // 检查这是否是一个 git 仓库
         const isRepo = await gitService.isGitRepository();
         if (!isRepo) {
           return {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -63,7 +56,7 @@ export function setupBranchTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -84,7 +77,7 @@ export function setupBranchTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `No branches found in repository at: ${normalizedPath}`,
+                text: `在仓库路径：${normalizedPath} 中未找到分支`,
               },
             ],
           };
@@ -92,13 +85,13 @@ export function setupBranchTools(server: McpServer): void {
 
         // Format output
         // 格式化输出
-        let output = `Branches in repository at: ${normalizedPath}\n\n`;
+        let output = `仓库路径：${normalizedPath} 中的分支\n\n`;
         allBranches.forEach((branch) => {
           // Clean up potential remote prefixes like 'remotes/origin/' for display if needed
           // 清理可能的远程前缀，如 'remotes/origin/'，以便显示
           const displayBranch = branch.replace(/^remotes\/[^\/]+\//, "");
           if (displayBranch === currentBranch) {
-            output += `* ${displayBranch} (current)\n`;
+            output += `* ${displayBranch} (当前)\n`;
           } else {
             output += `  ${displayBranch}\n`;
           }
@@ -117,7 +110,7 @@ export function setupBranchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -132,25 +125,22 @@ export function setupBranchTools(server: McpServer): void {
   // 创建分支
   server.tool(
     "git_branch_create",
-    "Create a new branch. Creates a new branch at the specified reference point (commit or branch) and optionally checks it out.",
+    "创建新分支。在指定的引用点（提交或分支）创建新分支，并可选择检出该分支。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
       name: z
         .string()
-        .min(1, "Branch name is required")
-        .describe("Name of the new branch to create"),
+        .min(1, "需要提供分支名称")
+        .describe("要创建的新分支名称"),
       startPoint: z
         .string()
         .optional()
-        .describe("Reference (commit, branch) to create the branch from"),
+        .describe("创建分支的起始点（提交、分支）"),
       checkout: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Whether to checkout the newly created branch"),
+        .describe("是否检出新创建的分支"),
     },
     async ({
       path,
@@ -168,14 +158,14 @@ export function setupBranchTools(server: McpServer): void {
         const gitService = new GitService(normalizedPath);
 
         // Check if this is a git repository
-        // 检查这是否是一个 Git 仓库
+        // 检查这是否是一个 git 仓库
         const isRepo = await gitService.isGitRepository();
         if (!isRepo) {
           return {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -193,7 +183,7 @@ export function setupBranchTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -204,8 +194,8 @@ export function setupBranchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully created branch '${name}'${
-                checkout ? " and checked it out" : ""
+              text: `成功创建分支 '${name}'${checkout ? " 并已检出" : ""}${
+                startPoint ? `，基于 '${startPoint}'` : ""
               }`,
             },
           ],
@@ -215,7 +205,7 @@ export function setupBranchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -230,21 +220,18 @@ export function setupBranchTools(server: McpServer): void {
   // 检出分支
   server.tool(
     "git_checkout",
-    "Checkout a branch, tag, or commit. Switches the working directory to the specified target and updates HEAD to point to it. Can optionally create a new branch.",
+    "检出分支、标签或提交。将工作目录切换到指定目标并更新 HEAD 指向。可以选择创建新分支。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
       target: z
         .string()
-        .min(1, "Branch or commit to checkout is required")
-        .describe("Branch name, tag, or commit hash to checkout"),
+        .min(1, "需要提供要检出的分支或提交")
+        .describe("要检出的分支名称、标签或提交哈希值"),
       createBranch: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Whether to create a new branch with the specified name"),
+        .describe("是否使用指定名称创建新分支"),
     },
     async ({
       path,
@@ -260,14 +247,14 @@ export function setupBranchTools(server: McpServer): void {
         const gitService = new GitService(normalizedPath);
 
         // Check if this is a git repository
-        // 检查这是否是一个 Git 仓库
+        // 检查这是否是一个 git 仓库
         const isRepo = await gitService.isGitRepository();
         if (!isRepo) {
           return {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -281,7 +268,7 @@ export function setupBranchTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -292,9 +279,7 @@ export function setupBranchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully checked out '${target}'${
-                createBranch ? " (new branch)" : ""
-              }`,
+              text: `成功检出${createBranch ? "并创建" : ""} '${target}'`,
             },
           ],
         };
@@ -303,7 +288,7 @@ export function setupBranchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -318,21 +303,18 @@ export function setupBranchTools(server: McpServer): void {
   // 删除分支
   server.tool(
     "git_branch_delete",
-    "Delete a branch. Removes the specified branch from the repository. By default, only fully merged branches can be deleted unless force is set to true.",
+    "删除分支。从仓库中移除指定的分支。默认情况下，只能删除已完全合并的分支，除非设置 force 为 true。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
       branch: z
         .string()
-        .min(1, "Branch name is required")
-        .describe("Name of the branch to delete"),
+        .min(1, "需要提供分支名称")
+        .describe("要删除的分支名称"),
       force: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Force deletion even if branch is not fully merged"),
+        .describe("即使分支未完全合并也强制删除"),
     },
     async ({
       path,
@@ -348,14 +330,14 @@ export function setupBranchTools(server: McpServer): void {
         const gitService = new GitService(normalizedPath);
 
         // Check if this is a git repository
-        // 检查这是否是一个 Git 仓库
+        // 检查这是否是一个 git 仓库
         const isRepo = await gitService.isGitRepository();
         if (!isRepo) {
           return {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -369,7 +351,7 @@ export function setupBranchTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -380,7 +362,7 @@ export function setupBranchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully deleted branch '${branch}'`,
+              text: `成功删除分支 '${branch}'`,
             },
           ],
         };
@@ -389,7 +371,7 @@ export function setupBranchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
@@ -404,30 +386,24 @@ export function setupBranchTools(server: McpServer): void {
   // 合并分支
   server.tool(
     "git_merge",
-    "Merge a branch into the current branch. Combines changes from the specified branch into the current branch with configurable merge strategies.",
+    "将分支合并到当前分支。使用可配置的合并策略将指定分支的更改合并到当前分支中。",
     {
-      path: z
-        .string()
-        .min(1, "Repository path is required")
-        .describe("Path to the Git repository"),
+      path: z.string().min(1, "需要提供仓库路径").describe("Git 仓库的路径"),
       branch: z
         .string()
-        .min(1, "Branch to merge is required")
-        .describe("Name of the branch to merge into the current branch"),
-      message: z
-        .string()
-        .optional()
-        .describe("Custom commit message for the merge commit"),
+        .min(1, "需要提供要合并的分支")
+        .describe("要合并到当前分支的分支名称"),
+      message: z.string().optional().describe("合并提交的自定义消息"),
       fastForwardOnly: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Only allow fast-forward merges (fail if not possible)"),
+        .describe("仅允许快进式合并（如果不可能则失败）"),
       noFastForward: z
         .boolean()
         .optional()
         .default(false)
-        .describe("Create a merge commit even when fast-forward is possible"),
+        .describe("即使可以快进也创建合并提交"),
     },
     async ({
       path,
@@ -447,14 +423,14 @@ export function setupBranchTools(server: McpServer): void {
         const gitService = new GitService(normalizedPath);
 
         // Check if this is a git repository
-        // 检查这是否是一个 Git 仓库
+        // 检查这是否是一个 git 仓库
         const isRepo = await gitService.isGitRepository();
         if (!isRepo) {
           return {
             content: [
               {
                 type: "text",
-                text: `Error: Not a Git repository: ${normalizedPath}`,
+                text: `错误：不是一个 Git 仓库：${normalizedPath}`,
               },
             ],
             isError: true,
@@ -468,7 +444,7 @@ export function setupBranchTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: Cannot specify both fastForwardOnly and noFastForward`,
+                text: `错误：不能同时指定 fastForwardOnly 和 noFastForward`,
               },
             ],
             isError: true,
@@ -487,7 +463,7 @@ export function setupBranchTools(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: `Error: ${result.resultError.errorMessage}`,
+                text: `错误：${result.resultError.errorMessage}`,
               },
             ],
             isError: true,
@@ -498,7 +474,7 @@ export function setupBranchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully merged branch '${branch}' into current branch`,
+              text: `成功将分支 '${branch}' 合并到当前分支`,
             },
           ],
         };
@@ -507,7 +483,7 @@ export function setupBranchTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error: ${
+              text: `错误：${
                 error instanceof Error ? error.message : String(error)
               }`,
             },
